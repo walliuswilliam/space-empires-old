@@ -1,5 +1,7 @@
-from random import random
-import math
+import sys
+sys.path.append('players')
+from custom_player import *
+from random_player import *
 
 class Game:
   def __init__(self, players, board_size=[7,7]):
@@ -58,20 +60,21 @@ class Game:
       player_scout_coords = self.game_state['players'][player.player_number]['scout_coords']
       choices = self.get_in_bounds_translations(player_scout_coords)
       turn = player.choose_translation(self.game_state, choices)
-      player_scout_coords = (player_scout_coords[0]+turn[0], player_scout_coords[1]+turn[1])
+      new_coords = (player_scout_coords[0]+turn[0], player_scout_coords[1]+turn[1])
+      self.game_state['players'][player.player_number]['scout_coords'] = new_coords
+    self.game_state['turn'] += 1
       
   def check_winner(self):
     game_players = self.game_state['players']
-    winner = self.game_state['winner']
     winners = []
     if game_players[1]['scout_coords'] == game_players[2]['home_colony_coords']:
       winners.append(1)
     if game_players[2]['scout_coords'] == game_players[1]['home_colony_coords']:
       winners.append(2)
     if len(winners) == 2:
-      winner = 'Tie'
+      self.game_state['winner'] = 'Tie'
     elif len(winners) == 1:
-      winner = winners[0]
+      self.game_state['winner'] = winners[0]
   
   def run_to_completion(self):
     self.check_winner
@@ -80,51 +83,3 @@ class Game:
       self.check_winner()
 
 
-
-class RandomPlayer():
-  def __init__(self):
-    self.player_number = None
-
-  def set_player_number(self, n):
-    self.player_number = n
-
-  def choose_translation(self, game_state, choices):
-    random_idx = math.floor(len(choices) * random())
-    return choices[random_idx]
-
-
-class CustomPlayer():
-  def __init__(self):
-    self.player_number = None
-
-  def set_player_number(self, n):
-    self.player_number = n
-
-  def get_opponent_player_number(self):
-    if self.player_number == None:
-      return None
-    elif self.player_number == 1:
-      return 2
-    elif self.player_number == 2:
-      return 1
-
-  def choose_translation(self, game_state, choices):
-    myself = game_state['players'][self.player_number]
-    opponent_player_number = self.get_opponent_player_number()
-    opponent = game_state['players'][opponent_player_number]
-
-    my_scout_coords = myself['scout_coords']
-    opponent_home_colony_coords = opponent['home_colony_coords']
-
-    best_move = choices[0]
-    print('pre best move', best_move)
-    print(choices)
-    for choice in choices:
-      
-      if self.calc_distance(choice, opponent_home_colony_coords) < self.calc_distance(best_move, opponent_home_colony_coords):
-        best_move = choice
-    print(best_move)
-    return best_move
-  
-  def calc_distance(self, point1, point2):
-    return abs(math.sqrt((point2[0]-point1[0])**2+(point2[1]-point1[1])**2))
